@@ -49,19 +49,39 @@ AS
 -- Question 2i
 CREATE VIEW q2i(namefirst, namelast, playerid, yearid)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT namefirst, namelast, playerid, yearid 
+  FROM people 
+  NATURAL JOIN HallofFame 
+  WHERE HallofFame.inducted = 'Y' 
+  ORDER BY yearid DESC, playerid ASC
 ;
 
 -- Question 2ii
+/*
+CREATE VIEW CAcollege(playerid, schoolid)
+AS
+  SELECT c.playerid, c.schoolid
+  FROM CollegePlaying c  INNER JOIN schools s
+  ON c.schoolid = s.schoolid
+  WHERE s.schoolState = 'CA'
+*/
 CREATE VIEW q2ii(namefirst, namelast, playerid, schoolid, yearid)
 AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
+  SELECT namefirst, namelast, q.playerid, schoolid, yearid
+  FROM q2i q JOIN (
+    SELECT c.playerid, c.schoolid FROM CollegePlaying c INNER JOIN schools s ON c.schoolid = s.schoolid WHERE s.schoolState = 'CA'
+  ) c 
+  ON c.playerid = q.playerid
+  ORDER BY yearid DESC, schoolid, q.playerid ASC
 ;
 
 -- Question 2iii
 CREATE VIEW q2iii(playerid, namefirst, namelast, schoolid)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT q.playerid, namefirst, namelast, schoolid 
+  FROM q2i q LEFT JOIN CollegePlaying c
+  ON q.playerid = c.playerid
+  ORDER BY q.playerid DESC, schoolid
 ;
 
 -- Question 3i
