@@ -57,20 +57,24 @@ AS
 ;
 
 -- Question 2ii
-/*
-CREATE VIEW CAcollege(playerid, schoolid)
+DROP VIEW IF EXISTS CAcollege;
+CREATE VIEW IF NOT EXISTS CAcollege(playerid, schoolid)
 AS
   SELECT c.playerid, c.schoolid
   FROM CollegePlaying c  INNER JOIN schools s
   ON c.schoolid = s.schoolid
   WHERE s.schoolState = 'CA'
-*/
+;
+
 CREATE VIEW q2ii(namefirst, namelast, playerid, schoolid, yearid)
 AS
   SELECT namefirst, namelast, q.playerid, schoolid, yearid
-  FROM q2i q JOIN (
+  FROM q2i q JOIN CAcollege c
+/*
+  (
     SELECT c.playerid, c.schoolid FROM CollegePlaying c INNER JOIN schools s ON c.schoolid = s.schoolid WHERE s.schoolState = 'CA'
   ) c 
+*/
   ON c.playerid = q.playerid
   ORDER BY yearid DESC, schoolid, q.playerid ASC
 ;
@@ -85,21 +89,55 @@ AS
 ;
 
 -- Question 3i
+DROP VIEW IF EXISTS slg;
+CREATE VIEW IF NOT EXISTS slg(playerid, yearid, AB, slgval)
+AS
+  SELECT playerid, yearid, AB, CAST((H + H2B + 2 * H3B + 3 * HR) AS FLOAT) / CAST(AB AS FLOAT)
+-- (H + H2B + 2 * H3B + 3 * HR + 0.0) / (AB + 0.0)
+  FROM batting
+;
+
 CREATE VIEW q3i(playerid, namefirst, namelast, yearid, slg)
 AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
+  SELECT p.playerid, p.namefirst, p.namelast, s.yearid, s.slgval
+  FROM people p INNER JOIN slg s
+  ON p.playerid = s.playerid
+  WHERE s.AB > 50
+  ORDER BY s.slgval DESC, s.yearid, p.playerid
+  LIMIT 10
 ;
 
 -- Question 3ii
+DROP VIEW IF EXISTS lslg;
+CREATE VIEW IF NOT EXISTS lslg(playerid, lslgval)
+--233
+AS 
+  SELECT playerid, (SUM(H) + SUM(H2B) + 2 * SUM(H3B) + 3 * SUM(HR) + 0.0) / (SUM(AB) + 0.0)
+  FROM batting
+  GROUP BY playerid
+  HAVING SUM(AB) > 50
+;
+
 CREATE VIEW q3ii(playerid, namefirst, namelast, lslg)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT p.playerid, p.namefirst, p.namelast, l.lslgval
+  FROM people p INNER JOIN lslg l
+  ON p.playerid = l.playerid
+  ORDER BY l.lslgval DESC, p.playerid
+  LIMIT 10
 ;
 
 -- Question 3iii
 CREATE VIEW q3iii(namefirst, namelast, lslg)
 AS
-  SELECT 1, 1, 1 -- replace this line
+  SELECT p.namefirst, p.namelast, l.lslgval
+  FROM people p JOIN lslg l
+  ON p.playerid = l.playerid
+  WHERE l.lslgval > (
+    SELECT lslgval
+    FROM lslg
+    WHERE playerid = 'mayswi01'
+  )
 ;
 
 -- Question 4i
